@@ -54,6 +54,9 @@ class Candy:
         
 # create the board of candies
 board = []
+# board: List, Candy로 이루어진 이중배열   
+# board[n][n]: n번째 있는 Candy의 값.
+
 for row_num in range(height // candy_height):
     
     # add a new row to the board
@@ -163,6 +166,7 @@ moves = 0
 # game loop
 clock = pygame.time.Clock()
 running = True
+#게임 루프가 여기서 이뤄집니다.
 while running:
     
     # set of matching candies
@@ -234,6 +238,8 @@ while running:
                     moves += 1
                     clicked_candy = None
                     swapped_candy = None
+                    #테스트 부분입니다.
+                    print("왼쪽으로 Swap 성공")
                     
             # if moving the clicked candy to the right,
             # make sure it's not on the last col
@@ -254,6 +260,8 @@ while running:
                     moves += 1
                     clicked_candy = None
                     swapped_candy = None
+                    #테스트 부분입니다.
+                    print("오른쪽으로 Swap 성공")
                     
             # if moving the clicked candy up,
             # make sure it's not on the first row
@@ -274,11 +282,12 @@ while running:
                     moves += 1
                     clicked_candy = None
                     swapped_candy = None
+                    #테스트 부분입니다.
+                    print("위쪽으로 Swap 성공")
                     
             # if moving the clicked candy down,
             # make sure it's not on the last row
             if direction == 'down' and clicked_candy.row_num < height / candy_height - 1:
-                
                 # get the candy below
                 swapped_candy = board[clicked_candy.row_num + 1][clicked_candy.col_num]
                 
@@ -294,6 +303,8 @@ while running:
                     moves += 1
                     clicked_candy = None
                     swapped_candy = None
+                    #테스트 부분입니다.
+                    print("아래쪽으로 Swap 성공")
                     
         # detect mouse release
         if clicked_candy is not None and event.type == MOUSEBUTTONUP:

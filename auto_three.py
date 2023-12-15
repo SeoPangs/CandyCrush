@@ -170,15 +170,6 @@ def match_three(candy):
         return matches
     else:
         return set()
-    
-#모든 보드의 변화를 체크하는 함수
-#디버깅을 위해 남겨두었습니다.
-def all_board_update():
-    for row in board:
-        for value in row:
-            value.image = pygame.image.load(f'swirl_{value.color}.png')
-            value.image = pygame.transform.smoothscale(value.image, candy_size)
-            value.snap()
         
 # 추가된 함수: 인공지능이 랜덤으로 캔디를 스왑하는 함수
 def random_swap():
@@ -412,7 +403,12 @@ while running:
             
     draw()
     pygame.display.update()
-    
+
+    matches = set()
+    for row in board:
+        for candy in row:
+            matches.update(match_three(candy))
+            
     # check if there's at least 3 matching candies
     if len(matches) >= 3:
         
@@ -445,5 +441,8 @@ while running:
                         
             draw()
             pygame.display.update()
+            for candy in matches :
+                matches.update(match_three(candy))
+            
             
 pygame.quit()

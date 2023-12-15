@@ -1,6 +1,27 @@
+###
+#첫번째
+#	현재 캔디를 읽고
+#	이를 자동으로 스왑하게 한다.
+#	무작위 스왑
+
+#	초기 스왑할 때 
+
+# 두번째
+#	유전자 함수 구성
+#	
+#	유전자 구성
+#		(a, b)의 노드를 (방향)으로.
+#	적합도 평가
+#	선택
+#	교차
+#	돌연변이
+###
+
 import pygame
 from pygame.locals import *
 import random
+import time
+
 
 pygame.init()
 
@@ -159,6 +180,62 @@ def all_board_update():
             value.image = pygame.transform.smoothscale(value.image, candy_size)
             value.snap()
         
+# 추가된 함수: 인공지능이 랜덤으로 캔디를 스왑하는 함수
+def random_swap():
+    global moves
+
+    # 랜덤한 두 캔디 선택
+    candy1 = random.choice([candy for row in board for candy in row])
+    candy2 = random.choice([candy for row in board for candy in row])
+
+    # 서로 다른 위치의 캔디를 선택하도록 보장
+    while candy1 == candy2:
+        candy2 = random.choice([candy for row in board for candy in row])
+
+    # 스왑 수행
+    swap(candy1, candy2)
+    moves += 1      
+
+def get_random_neighbor(candy):
+    neighbors = []
+
+    # 위
+    if candy.row_num > 0:
+        neighbors.append(board[candy.row_num - 1][candy.col_num])
+
+    # 아래
+    if candy.row_num < height // candy_height - 1:
+        neighbors.append(board[candy.row_num + 1][candy.col_num])
+
+    # 왼쪽
+    if candy.col_num > 0:
+        neighbors.append(board[candy.row_num][candy.col_num - 1])
+
+    # 오른쪽
+    if candy.col_num < width // candy_width - 1:
+        neighbors.append(board[candy.row_num][candy.col_num + 1])
+
+    return random.choice(neighbors) if neighbors else None
+
+# 추가된 함수: 인공지능이 랜덤으로 주변 캔디를 스왑하는 함수
+def random_swap_around():
+    global moves
+    candy = random.choice([candy for row in board for candy in row])
+
+    # 주변의 캔디를 무작위로 선택
+    neighbor_candy = get_random_neighbor(candy)
+
+    if neighbor_candy:
+        # 스왑 수행
+        swap(candy, neighbor_candy)
+        matches.update(match_three(candy))
+        matches.update(match_three(neighbor_candy))
+        moves += 1
+
+# 추가된 코드: 타이머 설정을 위한 변수
+swap_timer = pygame.USEREVENT + 1
+pygame.time.set_timer(swap_timer, 1000)  # 1초(1000ms)마다 타이머 이벤트 발생
+  
 # candy that the user clicked on
 clicked_candy = None
 
@@ -176,6 +253,8 @@ moves = 0
 # game loop
 clock = pygame.time.Clock()
 running = True
+
+
 #게임 루프가 여기서 이뤄집니다.
 while running:
     
@@ -185,6 +264,9 @@ while running:
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
+
+        elif event.type == swap_timer:
+            random_swap_around()
             
         # detect mouse click
         if clicked_candy is None and event.type == MOUSEBUTTONDOWN:

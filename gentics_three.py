@@ -1,27 +1,21 @@
 """
-#첫번째
-#	현재 캔디를 읽고
-#	이를 자동으로 스왑하게 한다.
-#	무작위 스왑
+    두번째
+        유전자 함수 구성
 
-#	초기 스왑할 때 
-
-# 두번째
-#	유전자 함수 구성
-#	
-#	유전자 구성
-#		(a, b)의 노드를 (방향)으로.
-#	적합도 평가
-#	선택
-#	교차
-#	돌연변이
+        유전자 구성
+    		(a, b)의 노드를 (방향)으로.
+        적합도 평가
+        선택
+        교차
+        돌연변이
 """
 
 import pygame
 from pygame.locals import *
 import random
-import time
 
+#AutoMode가 활성화되면 마우스 입력이 활성화 되지 않는다.
+bAutoMode = True
 
 pygame.init()
 
@@ -172,21 +166,7 @@ def match_three(candy):
     else:
         return set()
         
-# 추가된 함수: 인공지능이 랜덤으로 캔디를 스왑하는 함수
-def random_swap():
-    global moves
 
-    # 랜덤한 두 캔디 선택
-    candy1 = random.choice([candy for row in board for candy in row])
-    candy2 = random.choice([candy for row in board for candy in row])
-
-    # 서로 다른 위치의 캔디를 선택하도록 보장
-    while candy1 == candy2:
-        candy2 = random.choice([candy for row in board for candy in row])
-
-    # 스왑 수행
-    swap(candy1, candy2)
-    moves += 1      
 
 def get_random_neighbor(candy):
     neighbors = []
@@ -210,7 +190,7 @@ def get_random_neighbor(candy):
     return random.choice(neighbors) if neighbors else None
 
 # 추가된 함수: 인공지능이 랜덤으로 주변 캔디를 스왑하는 함수
-def random_swap_around():
+def swap_by_ai():
     global moves
     candy = random.choice([candy for row in board for candy in row])
 
@@ -258,149 +238,150 @@ while running:
             running = False
 
         elif event.type == swap_timer:
-            random_swap_around()
-            
-        # detect mouse click
-        if clicked_candy is None and event.type == MOUSEBUTTONDOWN:
-            
-            # get the candy that was clicked on
-            for row in board:
-                for candy in row:
-                    if candy.rect.collidepoint(event.pos):
+            swap_by_ai()
+
+        if not bAutoMode:
+            # detect mouse click
+            if clicked_candy is None and event.type == MOUSEBUTTONDOWN:
+                
+                # get the candy that was clicked on
+                for row in board:
+                    for candy in row:
+                        if candy.rect.collidepoint(event.pos):
+                            
+                            clicked_candy = candy
+                            
+                            # save the coordinates of the point where the user clicked
+                            click_x = event.pos[0]
+                            click_y = event.pos[1]
+                            
+            # detect mouse motion
+            if clicked_candy is not None and event.type == MOUSEMOTION:
+                
+                # calculate the distance between the point the user clicked on
+                # and the current location of the mouse cursor
+                distance_x = abs(click_x - event.pos[0])
+                distance_y = abs(click_y - event.pos[1])
+                
+                # reset the position of the swapped candy if direction of mouse motion changed
+                if swapped_candy is not None:
+                    swapped_candy.snap()
+                    
+                # determine the direction of the neighboring candy to swap with
+                if distance_x > distance_y and click_x > event.pos[0]:
+                    direction = 'left'
+                elif distance_x > distance_y and click_x < event.pos[0]:
+                    direction = 'right'
+                elif distance_y > distance_x and click_y > event.pos[1]:
+                    direction = 'up'
+                else:
+                    direction = 'down'
+                    
+                # if moving left/right, snap the clicked candy to its row position
+                # otherwise, snap it to its col position
+                if direction in ['left', 'right']:
+                    clicked_candy.snap_row()
+                else:
+                    clicked_candy.snap_col()
+                    
+                # if moving the clicked candy to the left,
+                # make sureit's not on the first col
+                if direction == 'left' and clicked_candy.col_num > 0:
+                    
+                    # get the candy to the left
+                    swapped_candy = board[clicked_candy.row_num][clicked_candy.col_num - 1]
+                    
+                    # move the two candies
+                    clicked_candy.rect.left = clicked_candy.col_num * candy_width - distance_x
+                    swapped_candy.rect.left = swapped_candy.col_num * candy_width + distance_x
+                    
+                    # snap them into their new positions on the board
+                    if clicked_candy.rect.left <= swapped_candy.col_num * candy_width + candy_width / 4:
+                        swap(clicked_candy, swapped_candy)
+                        matches.update(match_three(clicked_candy))
+                        matches.update(match_three(swapped_candy))
+                        moves += 1
+                        clicked_candy = None
+                        swapped_candy = None
+                        #테스트 부분입니다.
+                        print("왼쪽으로 Swap 성공")
                         
-                        clicked_candy = candy
+                # if moving the clicked candy to the right,
+                # make sure it's not on the last col
+                if direction == 'right' and clicked_candy.col_num < width / candy_width - 1:
+                    
+                    # get the candy to the right
+                    swapped_candy = board[clicked_candy.row_num][clicked_candy.col_num + 1]
+                    
+                    # move the two candies
+                    clicked_candy.rect.left = clicked_candy.col_num * candy_width + distance_x
+                    swapped_candy.rect.left = swapped_candy.col_num * candy_width - distance_x
+                    
+                    # snap them into their new positions on the board
+                    if clicked_candy.rect.left >= swapped_candy.col_num * candy_width - candy_width / 4:
+                        swap(clicked_candy, swapped_candy)
+                        matches.update(match_three(clicked_candy))
+                        matches.update(match_three(swapped_candy))
+                        moves += 1
+                        clicked_candy = None
+                        swapped_candy = None
+                        #테스트 부분입니다.
+                        print("오른쪽으로 Swap 성공")
                         
-                        # save the coordinates of the point where the user clicked
-                        click_x = event.pos[0]
-                        click_y = event.pos[1]
+                # if moving the clicked candy up,
+                # make sure it's not on the first row
+                if direction == 'up' and clicked_candy.row_num > 0:
+                    
+                    # get the candy above
+                    swapped_candy = board[clicked_candy.row_num - 1][clicked_candy.col_num]
+                    
+                    # move the two candies
+                    clicked_candy.rect.top = clicked_candy.row_num * candy_height - distance_y
+                    swapped_candy.rect.top = swapped_candy.row_num * candy_height + distance_y
+                    
+                    # snap them into their new positions on the board
+                    if clicked_candy.rect.top <= swapped_candy.row_num * candy_height + candy_height / 4:
+                        swap(clicked_candy, swapped_candy)
+                        matches.update(match_three(clicked_candy))
+                        matches.update(match_three(swapped_candy))
+                        moves += 1
+                        clicked_candy = None
+                        swapped_candy = None
+                        #테스트 부분입니다.
+                        print("위쪽으로 Swap 성공")
                         
-        # detect mouse motion
-        if clicked_candy is not None and event.type == MOUSEMOTION:
-            
-            # calculate the distance between the point the user clicked on
-            # and the current location of the mouse cursor
-            distance_x = abs(click_x - event.pos[0])
-            distance_y = abs(click_y - event.pos[1])
-            
-            # reset the position of the swapped candy if direction of mouse motion changed
-            if swapped_candy is not None:
-                swapped_candy.snap()
-                
-            # determine the direction of the neighboring candy to swap with
-            if distance_x > distance_y and click_x > event.pos[0]:
-                direction = 'left'
-            elif distance_x > distance_y and click_x < event.pos[0]:
-                direction = 'right'
-            elif distance_y > distance_x and click_y > event.pos[1]:
-                direction = 'up'
-            else:
-                direction = 'down'
-                
-            # if moving left/right, snap the clicked candy to its row position
-            # otherwise, snap it to its col position
-            if direction in ['left', 'right']:
-                clicked_candy.snap_row()
-            else:
-                clicked_candy.snap_col()
-                
-            # if moving the clicked candy to the left,
-            # make sureit's not on the first col
-            if direction == 'left' and clicked_candy.col_num > 0:
-                
-                # get the candy to the left
-                swapped_candy = board[clicked_candy.row_num][clicked_candy.col_num - 1]
-                
-                # move the two candies
-                clicked_candy.rect.left = clicked_candy.col_num * candy_width - distance_x
-                swapped_candy.rect.left = swapped_candy.col_num * candy_width + distance_x
-                
-                # snap them into their new positions on the board
-                if clicked_candy.rect.left <= swapped_candy.col_num * candy_width + candy_width / 4:
-                    swap(clicked_candy, swapped_candy)
-                    matches.update(match_three(clicked_candy))
-                    matches.update(match_three(swapped_candy))
-                    moves += 1
-                    clicked_candy = None
-                    swapped_candy = None
-                    #테스트 부분입니다.
-                    print("왼쪽으로 Swap 성공")
+                # if moving the clicked candy down,
+                # make sure it's not on the last row
+                if direction == 'down' and clicked_candy.row_num < height / candy_height - 1:
+                    # get the candy below
+                    swapped_candy = board[clicked_candy.row_num + 1][clicked_candy.col_num]
                     
-            # if moving the clicked candy to the right,
-            # make sure it's not on the last col
-            if direction == 'right' and clicked_candy.col_num < width / candy_width - 1:
-                
-                # get the candy to the right
-                swapped_candy = board[clicked_candy.row_num][clicked_candy.col_num + 1]
-                
-                # move the two candies
-                clicked_candy.rect.left = clicked_candy.col_num * candy_width + distance_x
-                swapped_candy.rect.left = swapped_candy.col_num * candy_width - distance_x
-                
-                # snap them into their new positions on the board
-                if clicked_candy.rect.left >= swapped_candy.col_num * candy_width - candy_width / 4:
-                    swap(clicked_candy, swapped_candy)
-                    matches.update(match_three(clicked_candy))
-                    matches.update(match_three(swapped_candy))
-                    moves += 1
-                    clicked_candy = None
-                    swapped_candy = None
-                    #테스트 부분입니다.
-                    print("오른쪽으로 Swap 성공")
+                    # move the two candies
+                    clicked_candy.rect.top = clicked_candy.row_num * candy_height + distance_y
+                    swapped_candy.rect.top = swapped_candy.row_num * candy_height - distance_y
                     
-            # if moving the clicked candy up,
-            # make sure it's not on the first row
-            if direction == 'up' and clicked_candy.row_num > 0:
-                
-                # get the candy above
-                swapped_candy = board[clicked_candy.row_num - 1][clicked_candy.col_num]
-                
-                # move the two candies
-                clicked_candy.rect.top = clicked_candy.row_num * candy_height - distance_y
-                swapped_candy.rect.top = swapped_candy.row_num * candy_height + distance_y
-                
-                # snap them into their new positions on the board
-                if clicked_candy.rect.top <= swapped_candy.row_num * candy_height + candy_height / 4:
-                    swap(clicked_candy, swapped_candy)
-                    matches.update(match_three(clicked_candy))
-                    matches.update(match_three(swapped_candy))
-                    moves += 1
-                    clicked_candy = None
-                    swapped_candy = None
-                    #테스트 부분입니다.
-                    print("위쪽으로 Swap 성공")
-                    
-            # if moving the clicked candy down,
-            # make sure it's not on the last row
-            if direction == 'down' and clicked_candy.row_num < height / candy_height - 1:
-                # get the candy below
-                swapped_candy = board[clicked_candy.row_num + 1][clicked_candy.col_num]
-                
-                # move the two candies
-                clicked_candy.rect.top = clicked_candy.row_num * candy_height + distance_y
-                swapped_candy.rect.top = swapped_candy.row_num * candy_height - distance_y
-                
-                # snap them into their new positions on the board
-                if clicked_candy.rect.top >= swapped_candy.row_num * candy_height - candy_height / 4:
-                    swap(clicked_candy, swapped_candy)
-                    matches.update(match_three(clicked_candy))
-                    matches.update(match_three(swapped_candy))
-                    moves += 1
-                    clicked_candy = None
-                    swapped_candy = None
-                    #테스트 부분입니다.
-                    print("아래쪽으로 Swap 성공")
-                    
+                    # snap them into their new positions on the board
+                    if clicked_candy.rect.top >= swapped_candy.row_num * candy_height - candy_height / 4:
+                        swap(clicked_candy, swapped_candy)
+                        matches.update(match_three(clicked_candy))
+                        matches.update(match_three(swapped_candy))
+                        moves += 1
+                        clicked_candy = None
+                        swapped_candy = None
+                        #테스트 부분입니다.
+                        print("아래쪽으로 Swap 성공")
                         
-                    
-        # detect mouse release
-        if clicked_candy is not None and event.type == MOUSEBUTTONUP:
-            
-            # snap the candies back to their original positions on the grid
-            clicked_candy.snap()
-            clicked_candy = None
-            if swapped_candy is not None:
-                swapped_candy.snap()
-                swapped_candy = None
+                            
+                        
+            # detect mouse release
+            if clicked_candy is not None and event.type == MOUSEBUTTONUP:
+                
+                # snap the candies back to their original positions on the grid
+                clicked_candy.snap()
+                clicked_candy = None
+                if swapped_candy is not None:
+                    swapped_candy.snap()
+                    swapped_candy = None
             
     draw()
     pygame.display.update()

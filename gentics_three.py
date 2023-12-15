@@ -1,7 +1,20 @@
 """
-	현재 캔디를 읽고
-	이를 자동으로 스왑하게 한다.
-	무작위 스왑
+#첫번째
+#	현재 캔디를 읽고
+#	이를 자동으로 스왑하게 한다.
+#	무작위 스왑
+
+#	초기 스왑할 때 
+
+# 두번째
+#	유전자 함수 구성
+#	
+#	유전자 구성
+#		(a, b)의 노드를 (방향)으로.
+#	적합도 평가
+#	선택
+#	교차
+#	돌연변이
 """
 
 import pygame
@@ -18,7 +31,7 @@ height = 400
 scoreboard_height = 25
 window_size = (width, height + scoreboard_height)
 screen = pygame.display.set_mode(window_size)
-pygame.display.set_caption('Match Three with Random Auto')
+pygame.display.set_caption('Match Three with Artificial Intelligence')
 pygame.display.set_icon(pygame.image.load("swirl_blue.png"))
 
 # list of candy colors

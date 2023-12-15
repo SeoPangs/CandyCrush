@@ -1,6 +1,11 @@
+"""
+자동 기능 없는 얘
+"""
+
 import pygame
 from pygame.locals import *
 import random
+
 
 pygame.init()
 
@@ -10,7 +15,8 @@ height = 400
 scoreboard_height = 25
 window_size = (width, height + scoreboard_height)
 screen = pygame.display.set_mode(window_size)
-pygame.display.set_caption('Match Three with Artificial Intelligence')
+pygame.display.set_caption('Match Three for The Manual')
+pygame.display.set_icon(pygame.image.load("swirl_blue.png"))
 
 # list of candy colors
 candy_colors = ['blue', 'green', 'orange', 'pink', 'purple', 'red', 'teal', 'yellow']
@@ -149,16 +155,8 @@ def match_three(candy):
         return matches
     else:
         return set()
-    
-#모든 보드의 변화를 체크하는 함수
-#디버깅을 위해 남겨두었습니다.
-def all_board_update():
-    for row in board:
-        for value in row:
-            value.image = pygame.image.load(f'swirl_{value.color}.png')
-            value.image = pygame.transform.smoothscale(value.image, candy_size)
-            value.snap()
         
+  
 # candy that the user clicked on
 clicked_candy = None
 
@@ -176,6 +174,8 @@ moves = 0
 # game loop
 clock = pygame.time.Clock()
 running = True
+
+
 #게임 루프가 여기서 이뤄집니다.
 while running:
     
@@ -185,6 +185,8 @@ while running:
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
+
+            
             
         # detect mouse click
         if clicked_candy is None and event.type == MOUSEBUTTONDOWN:
@@ -330,7 +332,12 @@ while running:
             
     draw()
     pygame.display.update()
-    
+
+    matches = set()
+    for row in board:
+        for candy in row:
+            matches.update(match_three(candy))
+
     # check if there's at least 3 matching candies
     if len(matches) >= 3:
         
@@ -363,5 +370,8 @@ while running:
                         
             draw()
             pygame.display.update()
+            for candy in matches :
+                matches.update(match_three(candy))
+            
             
 pygame.quit()

@@ -13,6 +13,7 @@
 import pygame
 from pygame.locals import *
 import random
+import numpy as np
 
 #AutoMode가 활성화되면 마우스 입력이 활성화 되지 않는다.
 bAutoMode = True
@@ -45,6 +46,7 @@ class Candy:
         self.col_num = col_num
         
         #여기 부분에서 유전자 모델을 심어놔야 할 것 같은데 말이야.
+        self.match = set()
         # assign a random image
         self.color = random.choice(candy_colors)
         image_name = f'swirl_{self.color}.png'
@@ -204,6 +206,58 @@ def swap_by_ai():
         matches.update(match_three(neighbor_candy))
         moves += 1
 
+
+#유전자 부분(수정중)
+def evaluate():
+    global board
+    scores = []
+    for row_num in range(len(board)):
+        for col_num in range(len(board[row_num])):
+            candy = board[row_num][col_num]
+            matches = find_matches(candy, set())
+            candy.match = len(matches)
+
+# 각 행에 대해 반복
+    for row in board:
+        # 각 요소의 값이 5 이상이면 True, 아니면 False로 설정하여 결과 리스트에 추가
+        result_row = [len(find_matches(candy, set())) for candy in row]
+        scores.append(result_row)
+
+    return scores
+
+def select():
+    print()
+
+def crossover():
+    print()
+
+def mutate():
+    print()
+
+def algorithm():
+    population_size = 10
+    generations = 50
+
+    grid = board
+
+    for generation in range(generations):
+        # 현재 세대의 개체 생성
+        population = [(random.randint(0, len[board] - 1), random.randint(0, len[board]- 2)) for _ in range(population_size)]
+
+        # 각 개체의 평가 점수 계산
+        scores = [evaluate(grid) for (row, col) in population]
+
+        # 가장 높은 평가를 가진 개체 선택
+        select()
+        best_move_index = scores.index(max(scores))
+        best_move = population[best_move_index]
+
+        # 선택된 이동 수행
+        row, col = best_move
+        grid[row][col], grid[row + 1][col] = grid[row + 1][col], grid[row][col]
+
+
+
 # 추가된 코드: 타이머 설정을 위한 변수
 swap_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(swap_timer, 1000)  # 1초(1000ms)마다 타이머 이벤트 발생
@@ -239,6 +293,12 @@ while running:
 
         elif event.type == swap_timer:
             swap_by_ai()
+            
+            
+            gene_val = evaluate()
+            print("Gene")
+            for i in gene_val:
+                print(i)
 
         if not bAutoMode:
             # detect mouse click

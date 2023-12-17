@@ -36,7 +36,6 @@ class Candy:
         self.row_num = row_num
         self.col_num = col_num
         
-        #여기 부분에서 유전자 모델을 심어놔야 할 것 같은데 말이야.
         # assign a random image
         self.color = random.choice(candy_colors)
         image_name = f'swirl_{self.color}.png'

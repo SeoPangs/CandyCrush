@@ -81,6 +81,9 @@ class Candy:
         self.rect.left = col_num * candy_width
         self.rect.top = row_num * candy_height
         
+    def check(self):
+        self.image = pygame.image.load(f'swirl_{self.color}.png')
+        self.image = pygame.transform.smoothscale(self.image, candy_size)
     # draw the image on the screen
     def draw(self):
         screen.blit(self.image, self.rect)
@@ -362,7 +365,18 @@ for i in population[0].genes:
     print("]")
 
 board = population[0].genes
+
 ### 여기까지 유전자 알고리즘
+
+def print_board():
+    for i in board:
+        print("[", end="")
+        for j in i:
+            print(j.color, end=", ")
+            j.check()
+        print("]")
+
+print_board()
 
 # 추가된 코드: 타이머 설정을 위한 변수
 swap_timer = pygame.USEREVENT + 1
@@ -464,6 +478,7 @@ while running:
                         swapped_candy = None
                         #테스트 부분입니다.
                         print("왼쪽으로 Swap 성공")
+                        print_board()
                         
                 # if moving the clicked candy to the right,
                 # make sure it's not on the last col

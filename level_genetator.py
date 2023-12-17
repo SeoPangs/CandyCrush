@@ -37,7 +37,7 @@ import random
 import numpy as np
 
 #AutoMode가 활성화되면 마우스 입력이 활성화 되지 않는다.
-bAutoMode = True
+bAutoMode = False
 
 pygame.init()
 
@@ -49,6 +49,10 @@ window_size = (width, height + scoreboard_height)
 screen = pygame.display.set_mode(window_size)
 pygame.display.set_caption('Match Three with Artificial Intelligence')
 pygame.display.set_icon(pygame.image.load("swirl_blue.png"))
+
+# game variables
+score = 0
+moves = 0
 
 # list of candy colors
 candy_colors = ['blue', 'green', 'orange', 'pink', 'purple', 'red', 'teal', 'yellow']
@@ -97,6 +101,7 @@ board = []
 # board: List, Candy로 이루어진 이중배열   
 # board[n][n]: n번째 있는 Candy의 값.
 
+'''
 for row_num in range(height // candy_height):
     
     # add a new row to the board
@@ -107,6 +112,7 @@ for row_num in range(height // candy_height):
         # create the candy and add it to the board
         candy = Candy(row_num, col_num)
         board[row_num].append(candy)
+'''
         
 def draw():
     
@@ -149,7 +155,7 @@ def swap(candy1, candy2):
     candy2.snap()
     
 # find neighboring candies that match the candy's color
-def find_matches(candy, matches):
+def find_matches(candy, matches, board):
     
     # add the candy to the set
     matches.add(candy)
@@ -158,32 +164,48 @@ def find_matches(candy, matches):
     if candy.row_num > 0:
         neighbor = board[candy.row_num - 1][candy.col_num]
         if candy.color == neighbor.color and neighbor not in matches:
-            matches.update(find_matches(neighbor, matches))
+            matches.update(find_matches(neighbor, matches, board))
             
     # check the candy below if it's the same color
     if candy.row_num < height / candy_height - 1:
         neighbor = board[candy.row_num + 1][candy.col_num]
         if candy.color == neighbor.color and neighbor not in matches:
-            matches.update(find_matches(neighbor, matches))
+            matches.update(find_matches(neighbor, matches, board))
             
     # check the candy to the left if it's the same color
     if candy.col_num > 0:
         neighbor = board[candy.row_num][candy.col_num - 1]
         if candy.color == neighbor.color and neighbor not in matches:
-            matches.update(find_matches(neighbor, matches))
+            matches.update(find_matches(neighbor, matches, board))
             
     # check the candy to the right if it's the same color
     if candy.col_num < width / candy_width - 1:
         neighbor = board[candy.row_num][candy.col_num + 1]
         if candy.color == neighbor.color and neighbor not in matches:
-            matches.update(find_matches(neighbor, matches))
+            matches.update(find_matches(neighbor, matches, board))
             
     return matches
     
+def match_board(board):
+    match_value_list = []
+    for row_num in range(len(board)):
+        for col_num in range(len(board[row_num])):
+            candy = board[row_num][col_num]
+            matches = find_matches(candy, set(), board)
+            candy.match = len(matches)
+
+    # 각 행에 대해 반복
+    for row in board:
+        # 각 캔디 주변의 수으 추출해서 저장,
+        result_row = [len(find_matches(candy, set(), board)) for candy in row]
+        match_value_list.append(result_row)
+
+    return match_value_list
+
 # return a set of at least 3 matching candies or an empty set
 def match_three(candy):
     
-    matches = find_matches(candy, set())
+    matches = find_matches(candy, set(), board)
     if len(matches) >= 3:
         return matches
     else:
@@ -227,7 +249,120 @@ def swap_by_ai():
         matches.update(match_three(neighbor_candy))
         moves += 1
 
+SIZE = 10
+class Chromosome():
+    def __init__(self, g=[]) -> None:
+        self.genes = g.copy()
+        self.fitness = 0
+        if self.genes.__len__()==0:
+            for row_num in range(SIZE):
+                # add a new row to the board
+                self.genes.append([])
+                for col_num in range(SIZE):
+                    # create the candy and add it to the board
+                    candy = Candy(row_num, col_num)
+                    self.genes[row_num].append(candy)
 
+    def evaluate(self):
+        value = 0
+        list = match_board(self.genes)
+        for i in list:
+            #print(i)
+            for j in i:
+                if j >= 3:
+                    value += 1
+        return value
+
+def select(pop):
+    max_value  = sum([c.evaluate() for c in population])
+    pick    = random.uniform(0, max_value)
+    current = 0
+    
+    # 룰렛휠에서 어떤 조각에 속하는지를 알아내는 루프
+    for c in pop:
+        current += c.evaluate()
+        if current > pick:
+            return c
+
+MUTATION_RATE = 0.1
+def mutate(chromosome):
+    for row_num in range(SIZE):
+        for col_num in range(SIZE):
+            if random.random() < MUTATION_RATE:
+                # 일정 확률로 돌연변이 발생
+                chromosome.genes[row_num][col_num].color = random.choice(candy_colors)
+
+def crossover(pop):
+    father = select(pop)
+    mother = select(pop)
+    index1 = random.randint(0, SIZE - 2)
+    index2 = random.randint(index1 + 1, SIZE - 1)
+
+    # 부분적 Crossover
+    child1 = father.genes[:index1] + mother.genes[index1:index2] + father.genes[index2:]
+    child2 = mother.genes[:index1] + father.genes[index1:index2] + mother.genes[index2:]
+
+    return (child1, child2)
+
+def print_population(pop):
+    i = 0
+    for x in pop:
+        print("염색체 #", i, "적합도=", x.evaluate())
+        i += 1
+    print("")
+
+
+### 여기부터 유전자 알고리즘
+POPULATION_SIZE = 100
+population = []
+
+for i in range(POPULATION_SIZE):
+    population.append(Chromosome())
+
+population.sort(key=lambda x: x.evaluate())
+
+count=0
+print("세대 번호=", count)
+print_population(population)
+
+while population[0].evaluate() > 0:
+    print("New Generations")
+    new_pop = []
+
+    crossover_index = 0
+    # 선택과 교차 연산
+    for _ in range(POPULATION_SIZE//2):
+        crossover_index += 1
+        print(crossover_index)
+        c1, c2 = crossover(population);
+        new_pop.append(Chromosome(c1));
+        new_pop.append(Chromosome(c2));
+
+    # 자식 세대가 부모 세대를 대체한다. 
+    # 깊은 복사를 수행한다. 
+    population = new_pop.copy();    
+    
+    # 돌연변이 연산
+    for c in population: 
+        mutate(c)
+
+    # 출력을 위한 정렬
+    population.sort(key=lambda x: x.evaluate())
+    print("세대 번호=", count)
+    print_population(population)
+    count += 1
+    if count > 100 : 
+        break;
+
+print("최종값")
+for i in population[0].genes:
+    print("[", end="")
+    for j in i:
+        print(j.color, end=", ")
+    print("]")
+
+board = population[0].genes
+### 여기까지 유전자 알고리즘
 
 # 추가된 코드: 타이머 설정을 위한 변수
 swap_timer = pygame.USEREVENT + 1
@@ -243,9 +378,7 @@ swapped_candy = None
 click_x = None
 click_y = None
 
-# game variables
-score = 0
-moves = 0
+
 
 # game loop
 clock = pygame.time.Clock()
@@ -263,7 +396,8 @@ while running:
             running = False
 
         elif event.type == swap_timer:
-            swap_by_ai()
+            if bAutoMode:
+                swap_by_ai()
 
         if not bAutoMode:
             # detect mouse click

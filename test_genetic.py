@@ -83,14 +83,25 @@ def select(pop):
         current += c.evaluate()
         if current > pick:
             return c
-def mutate(pop):
-    pass
+
+MUTATION_RATE = 0.1
+def mutate(chromosome):
+    for row_num in range(SIZE):
+        for col_num in range(SIZE):
+            if random.random() < MUTATION_RATE:
+                # 일정 확률로 돌연변이 발생
+                chromosome.genes[row_num][col_num].color = random.choice(candy_colors)
+
 def crossover(pop):
     father = select(pop)
     mother = select(pop)
-    index = random.randint(1, SIZE - 1)
-    child1 = father.genes[:index] + mother.genes[index:] 
-    child2 = mother.genes[:index] + father.genes[index:] 
+    index1 = random.randint(0, SIZE - 2)
+    index2 = random.randint(index1 + 1, SIZE - 1)
+
+    # 부분적 Crossover
+    child1 = father.genes[:index1] + mother.genes[index1:index2] + father.genes[index2:]
+    child2 = mother.genes[:index1] + father.genes[index1:index2] + mother.genes[index2:]
+
     return (child1, child2)
 
 def print_population(pop):
@@ -114,6 +125,7 @@ class Candy:
         # assign a random image
         self.color = random.choice(candy_colors)
 
+#For Test
 ccc = Chromosome()
 
 for i in ccc.genes:
@@ -129,11 +141,11 @@ for i in match_board(ccc.genes):
     for j in i:
         print(j, end=", ")
     print("]")
-
-
 print(ccc.evaluate())
 
-POPULATION_SIZE = 1000
+
+
+POPULATION_SIZE = 100
 population = []
 
 for i in range(POPULATION_SIZE):
@@ -146,10 +158,14 @@ print("세대 번호=", count)
 print_population(population)
 
 while population[0].evaluate() > 0:
+    print("New Generations")
     new_pop = []
 
+    crossover_index = 0
     # 선택과 교차 연산
     for _ in range(POPULATION_SIZE//2):
+        crossover_index += 1
+        print(crossover_index)
         c1, c2 = crossover(population);
         new_pop.append(Chromosome(c1));
         new_pop.append(Chromosome(c2));
@@ -159,14 +175,16 @@ while population[0].evaluate() > 0:
     population = new_pop.copy();    
     
     # 돌연변이 연산
-    for c in population: mutate(c)
+    for c in population: 
+        mutate(c)
 
     # 출력을 위한 정렬
     population.sort(key=lambda x: x.evaluate())
     print("세대 번호=", count)
     print_population(population)
     count += 1
-    if count > 100 : break;
+    if count > 100 : 
+        break;
 
 print("최종값")
 for i in population[0].genes:

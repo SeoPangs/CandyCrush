@@ -166,7 +166,6 @@ for i in range(4):
             candy = Candy(row_num, col_num, random.randint(0, 7))
             boards[i][row_num].append(candy)
 
-
 '''print("Parent1-------------Parent2-------------Parent3-------------Parent4-------------")
 for i in range(10):
     for k in range(4):
@@ -192,8 +191,8 @@ def Mutation(board):
     for i in range(10):
         for j in range(10):
             print(board[i][j].color[0], end = " ")
-        print("")'''
-    return board
+        print("")
+    return board'''
 
 #교차
 def crossover(parent):
@@ -279,7 +278,7 @@ while True:
     '''print("\n\ngeneration: ", gene)'''
     selected_board = 4
     fit = []
-    '''print("Fitness: ", end = "")'''
+    print("Fitness: ", end = "")
     
     for i in range(4):
         fit.append(100 - selection(boards[i]))

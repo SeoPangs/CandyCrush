@@ -186,7 +186,6 @@ def Mutation(board):
                 image_name = f'swirl_{candy.color}.png'
                 candy.image = pygame.image.load(image_name)
                 candy.image = pygame.transform.smoothscale(candy.image, candy_size)
-                print("m", candy.row_num, candy.col_num)
     
     '''print("\nchild--------")
 
@@ -450,7 +449,6 @@ while running:
     draw()
     pygame.display.update()
 
-    #초기 맵 생성 후 그룹 확인(유전자 알고리즘으로 보드만든 뒤엔 삭제 예정)
     matches = set()
     for row in board:
         for candy in row:

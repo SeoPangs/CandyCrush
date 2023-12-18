@@ -260,14 +260,18 @@ def selection(board):
     unfitness = 0
     for row in board:
         for candy in row:
-            if(len(match_three(board, candy, "up")) >= 3):
-                unfitness += 1
-            if(len(match_three(board, candy, "down")) >= 3):
-                unfitness += 1
-            if(len(match_three(board, candy, "left")) >= 3):
-                unfitness += 1
-            if(len(match_three(board, candy, "right")) >= 3):
-                unfitness += 1
+            tmp = match_three(board, candy, "up")
+            if(len(tmp) >= 3):
+                unfitness += len(tmp)
+            tmp = match_three(board, candy, "down")
+            if(len(tmp) >= 3):
+                unfitness += len(tmp)
+            tmp = match_three(board, candy, "left")
+            if(len(tmp) >= 3):
+                unfitness += len(tmp)
+            tmp = match_three(board, candy, "right")
+            if(len(tmp) >= 3):
+                unfitness += len(tmp)
     return unfitness
 
 #유전자 알고리즘으로 보드 생성

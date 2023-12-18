@@ -4,7 +4,7 @@ import random
 import numpy as np
 
 #AutoMode가 활성화되면 마우스 입력이 활성화 되지 않는다.
-bAutoMode = False
+bAutoMode = True
 
 bGeneticLevelGenerate = False
 
@@ -205,20 +205,54 @@ def get_random_neighbor(candy):
 
     return random.choice(neighbors) if neighbors else None
 
+def get_neighbors(candy, board):
+    neighbors = []
+    if candy.row_num > 0:
+        neighbors.append(board[candy.row_num - 1][candy.col_num])
+
+    # 아래
+    if candy.row_num < height // candy_height - 1:
+        neighbors.append(board[candy.row_num + 1][candy.col_num])
+
+    # 왼쪽
+    if candy.col_num > 0:
+        neighbors.append(board[candy.row_num][candy.col_num - 1])
+
+    # 오른쪽
+    if candy.col_num < width // candy_width - 1:
+        neighbors.append(board[candy.row_num][candy.col_num + 1])
+    
+    return neighbors
+
+def print_candy(candy):
+    print("Candy %d %d %s" %(candy.row_num, candy.col_num, candy.color))
+
 # 추가된 함수: 인공지능이 랜덤으로 주변 캔디를 스왑하는 함수
 def swap_by_ai():
     global moves
+    temp_board = board.copy()
     candy = random.choice([candy for row in board for candy in row])
 
-    # 주변의 캔디를 무작위로 선택
-    neighbor_candy = get_random_neighbor(candy)
+    print_candy(candy)
+    match_board(board)
 
-    if neighbor_candy:
+    # 주변의 캔디를 무작위로 선택
+    neighbor_candies = get_neighbors(candy, board)
+    for iCandy in neighbor_candies:
+        if iCandy:
         # 스왑 수행
-        swap(candy, neighbor_candy)
-        matches.update(match_three(candy))
-        matches.update(match_three(neighbor_candy))
-        moves += 1
+            #iCandy, candy = candy, iCandy
+            matches = find_matches(iCandy, set(), board)
+
+            for i in matches:
+                print_candy(i)
+#여기만 좀 수정하자.
+            swap(candy, iCandy)
+            matches.update(match_three(candy))
+            matches.update(match_three(iCandy))
+            moves += 1  
+
+    
 
 SIZE = 10
 class Chromosome():
@@ -392,6 +426,7 @@ while running:
                         if candy.rect.collidepoint(event.pos):
                             
                             clicked_candy = candy
+                            print("Mathces %d %d %s" %(candy.row_num, candy.col_num, candy.color))
                             
                             # save the coordinates of the point where the user clicked
                             click_x = event.pos[0]

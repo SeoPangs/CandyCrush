@@ -39,7 +39,7 @@ class Candy:
         self.row_num = row_num
         self.col_num = col_num
         
-        self.match = set()
+        self.match = 0
         # assign a random image
         self.color = random.choice(candy_colors)
         image_name = f'swirl_{self.color}.png'
@@ -106,7 +106,7 @@ def draw():
     screen.blit(moves_text, moves_text_rect)
     
 # swap the positions of two candies
-def swap(candy1, candy2):
+def swap(candy1, candy2, board):
     
     temp_row = candy1.row_num
     temp_col = candy1.col_num
@@ -230,27 +230,64 @@ def print_candy(candy):
 # 추가된 함수: 인공지능이 랜덤으로 주변 캔디를 스왑하는 함수
 def swap_by_ai():
     global moves
-    temp_board = board.copy()
-    candy = random.choice([candy for row in board for candy in row])
+    best_move_candy = set()
+    candies = [element for row in board for element in row]
+    
+    #print_candy(candy)
+    #match_board(board)
+    good_candy = []
+    for candy in candies:
+        # 주변의 캔디들을 반환
+        neighbor_candies = get_neighbors(candy, board)
+        
 
-    print_candy(candy)
-    match_board(board)
+        for iCandy in neighbor_candies:
+            if iCandy:
+            # 스왑 수행
+                #iCandy, candy = candy, iCandy
+                
+                #캔디를 스왑해서 해당 캔디의 점수를 판단
+                swap(candy, iCandy, board)
+                candy.match = len(match_three(candy))
+                print("Near Candy %d"%(candy.match))
 
-    # 주변의 캔디를 무작위로 선택
-    neighbor_candies = get_neighbors(candy, board)
-    for iCandy in neighbor_candies:
-        if iCandy:
-        # 스왑 수행
-            #iCandy, candy = candy, iCandy
-            matches = find_matches(iCandy, set(), board)
+                #원상복구
+                swap(candy, iCandy, board)
 
-            for i in matches:
-                print_candy(i)
-#여기만 좀 수정하자.
-            swap(candy, iCandy)
-            matches.update(match_three(candy))
-            matches.update(match_three(iCandy))
-            moves += 1  
+                #matches = find_matches(candy, set(), board)
+            
+                '''
+                for i in matches:
+                    print_candy(i)
+                    swap(candy, iCandy, board)
+                    #match_three
+                '''
+    
+    
+
+        #이웃 캔디 중에 제일 match 값이 제일 높은 값을 반환한다.
+        neighbor_candies.sort(key=lambda x:x.match, reverse=True)
+        print("Match ", end="")
+        print(neighbor_candies[0].match)
+    
+        candy_matching = [candy, neighbor_candies[0]]
+        good_candy.append(candy_matching)
+    
+    print("good_candy", end="")
+    print(len(good_candy))
+
+    good_candy.sort(key=lambda x: x[1].match, reverse= True) 
+    for i in good_candy:
+        print("candy match %d" % i[1].match)
+
+           
+    swap(good_candy[0][0], good_candy[0][1], board)
+    print(type(good_candy[0]))
+    print(good_candy[0])
+    #matches.update(good_candy[0][0])
+    #matches.update(good_candy[0][1])
+
+    moves += 1  
 
     
 
@@ -277,6 +314,8 @@ class Chromosome():
                 if j >= 3:
                     value += 1
         return value
+
+
 
 def select(pop):
     max_value  = sum([c.evaluate() for c in population])
@@ -332,7 +371,7 @@ if bGeneticLevelGenerate:
     print_population(population)
 
     while population[0].evaluate() > 0:
-        print("New Generations")
+        print("%d Generations" % count)
         new_pop = []
 
         crossover_index = 0
@@ -474,7 +513,7 @@ while running:
                     
                     # snap them into their new positions on the board
                     if clicked_candy.rect.left <= swapped_candy.col_num * candy_width + candy_width / 4:
-                        swap(clicked_candy, swapped_candy)
+                        swap(clicked_candy, swapped_candy, board)
                         matches.update(match_three(clicked_candy))
                         matches.update(match_three(swapped_candy))
                         moves += 1
@@ -497,7 +536,7 @@ while running:
                     
                     # snap them into their new positions on the board
                     if clicked_candy.rect.left >= swapped_candy.col_num * candy_width - candy_width / 4:
-                        swap(clicked_candy, swapped_candy)
+                        swap(clicked_candy, swapped_candy, board)
                         matches.update(match_three(clicked_candy))
                         matches.update(match_three(swapped_candy))
                         moves += 1
@@ -519,7 +558,7 @@ while running:
                     
                     # snap them into their new positions on the board
                     if clicked_candy.rect.top <= swapped_candy.row_num * candy_height + candy_height / 4:
-                        swap(clicked_candy, swapped_candy)
+                        swap(clicked_candy, swapped_candy, board)
                         matches.update(match_three(clicked_candy))
                         matches.update(match_three(swapped_candy))
                         moves += 1
@@ -540,7 +579,7 @@ while running:
                     
                     # snap them into their new positions on the board
                     if clicked_candy.rect.top >= swapped_candy.row_num * candy_height - candy_height / 4:
-                        swap(clicked_candy, swapped_candy)
+                        swap(clicked_candy, swapped_candy, board)
                         matches.update(match_three(clicked_candy))
                         matches.update(match_three(swapped_candy))
                         moves += 1
